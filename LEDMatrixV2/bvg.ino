@@ -1,72 +1,100 @@
-1.	const char *bvgHost = "v5.bvg.transport.rest";
-2.	 
-3.	void getBvgData()
-4.	{
-5.	  Serial.print("connecting to "); Serial.println(bvgHost);
-6.	  clientSecure.setInsecure();
-7.	 
-8.	  //connect to bvg api
-9.	  if (clientSecure.connect(bvgHost, 443)) {
-10.	    clientSecure.println(String("GET /stops/900063101/departures?subway=false&tram=false&bus=false&pretty=false&duration=30 HTTP/1.1\r\n") +
-11.	                   "Host: " + bvgHost + "\r\nUser-Agent: ArduinoWiFi/1.1\r\n" +
-12.	                   "Connection: close\r\n\r\n");
-13.	  } else {
-14.	    Serial.println("connection failed");
-15.	    return;
-16.	  }
-17.	 
-18.	  //wait till bvg is ready
-19.	  int repeatCounter = 0;
-20.	  while (!clientSecure.available() && repeatCounter < 50) {
-21.	    delay(100);
-22.	    Serial.println("w.");
-23.	    repeatCounter++;
-24.	  }
-25.	  
-26.	  //response contains headerinfo before showing json response, skip it
-27.	  while (clientSecure.connected()) {
-28.	    String line = clientSecure.readStringUntil('\n');
-29.	    if (line == "\r") {
-30.	      Serial.println("headers received");
-31.	      for (byte i = 0; i < 6; i++) {
-32.	        Serial.print((char)clientSecure.read());
-33.	      }
-34.	      break;
-35.	    }
-36.	  }
-37.	 
-38.	  //set DynamicJsonDocument size a bit smaller than ESP8266 MaxFreeBlockSize
-39.	  DynamicJsonDocument root(ESP.getMaxFreeBlockSize()-1000);
-40.	 
-41.	  //seserialize Data
-42.	  DeserializationError error = deserializeJson(root, clientSecure);
-43.	  if (error) {
-44.	    Serial.print(F("deserializeJson() failed: "));
-45.	    Serial.println(error.f_str());
-46.	    return;
-47.	  }
-48.	  clientSecure.stop();
-49.	 
-50.	  //set global departure variable to new String
-51.	  departures = "S1: ";
-52.	  for (byte i = 0; i < sizeof(root) - 1; i++) {
-53.	 
-54.	    //for each train, decide if it's the right direction and show time or canceled
-55.	    if(root[i].as<String>() != NULL){
-56.	      String platform = root[i]["platform"].as<String>();
-57.	      if(platform == "2"){
-58.	        String departure = root[i]["when"].as<String>();
-59.	        if(departure == NULL){
-60.	          departures += "canceled / ";
-61.	        }else{
-62.	          departures += departure.substring(11,16) + " / ";
-63.	        }
-64.	      }else if(platform == NULL){
-65.	        departures += "canceled / ";
-66.	      }
-67.	    }
-68.	  }
-69.	  
-70.	  departures = departures.substring(0, (departures.length()-3));
-71.	  departures += "                ";
-72.	}
+#include <WiFiClientSecure.h>
+#include <ESP8266HTTPClient.h>
+#include <ArduinoJson.h>
+
+const char *bvgHost = "https://v6.vbb.transport.rest/stops/900063101/departures?subway=false&tram=false&bus=false&pretty=false&duration=30";
+// const char *bvgHost = "https://v6.vbb.transport.rest/locations?query=Günzelstraße&fuzzy=true&results=10&stops=true&addresses=true&poi=true&linesOfStops=false&language=en";
+
+void getBvgData() {
+    Serial.println("Lade BVG...");
+    Serial.print("connecting to "); 
+    // Serial.println(bvgHost);
+
+    String answer = httpGETRequest(bvgHost);
+    Serial.println("Daten geladen");
+    // Serial.println(answer); // Print the payload content
+
+     //set DynamicJsonDocument size a bit smaller than ESP8266 MaxFreeBlockSize
+    DynamicJsonDocument root(ESP.getMaxFreeBlockSize()-1000);
+    
+    //seserialize Data
+    DeserializationError error = deserializeJson(root, answer);
+    if (error) {
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.f_str());
+        return;
+    }
+
+    //set global departure variable to new String
+    departures = "S1: ";
+    for (byte i = 0; i < sizeof(root["departures"]) - 1; i++) {
+        //for each train, decide if it's the right direction and show time or canceled
+        if(root[i].as<String>() != NULL){
+            String platform = root["departures"][i]["plannedPlatform"].as<String>();
+            if(platform == "2"){
+                String departure = root["departures"][i]["when"].as<String>();
+                if(departure == NULL){
+                    departures += root["departures"][i]["plannedWhen"].as<String>().substring(11,16) + " / ";
+                }else{
+                    departures += departure.substring(11,16) + " / ";
+                }
+            }else if(platform == NULL){
+                departures += "canceled / ";
+            }
+        }
+        Serial.println(departures);
+    }
+    
+    departures = departures.substring(0, (departures.length()-3));
+}
+
+String httpGETRequest(const char* serverName) {
+  WiFiClientSecure client;
+  HTTPClient http;
+
+  // Debugging output for WiFi connection
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi not connected!");
+    return "{}";
+  }
+  
+  // Debugging output for SSL/TLS
+  client.setInsecure(); // Use this only for debugging purposes, not recommended for production
+  Serial.println("Starting connection to server...");
+  
+  // Your IP address with path or Domain name with URL path 
+  if (!http.begin(client, serverName)) {
+    Serial.println("Failed to begin HTTP connection");
+    return "{}";
+  }
+  
+  // Send HTTP GET request
+  int httpResponseCode = http.GET();
+  
+  String payload = "{}"; 
+  
+  if (httpResponseCode > 0) {
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+
+    // Read payload in chunks
+    WiFiClient *stream = http.getStreamPtr();
+    payload = "";
+    while (stream->available()) {
+        char buffer[128];
+        int len = stream->readBytes(buffer, sizeof(buffer) - 1);
+        buffer[len] = '\0';
+        payload.concat(buffer); // Use concat to handle UTF-8 strings correctly
+        // Search for the substring "When"
+        // Serial.println(buffer);
+    }
+  } else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode);
+  }
+  
+  // Free resources
+  http.end();
+
+  return payload;
+}

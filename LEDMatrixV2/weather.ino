@@ -104,16 +104,16 @@ void getWeatherData()
   weatherString += "  "+ arrowUp + ": "+  String(tempMax, 1) + deg + "C ";
   // weatherString += "  Luftf.: " + String(humidity) + "%  ";  // Luftfeuchtigkeit
   // weatherString += "  Luftd: " + String(pressure) + "hPa  "; // Luftdruck
-    weatherString += "  Weather: " + String(weatherDescription) + "  "; // Regenrisiko
-  if(snow != 0.00){
-    weatherString += "  Snow: " + String(snow, 1) + " mm"; // Regenrisiko
-  }else if(rain != 0.00){
-    weatherString += "  Rain: " + String(rain, 1) + " mm"; // Regenrisiko
-  }else{
-    weatherString += "  Clouds: " + String(clouds) + " %"; // Regenrisiko
-  }
+    // weatherString += "  Weather: " + String(weatherDescription); // Regenrisiko
+  // if(snow != 0.00){
+  //   weatherString += "  Snow: " + String(snow, 1) + " mm"; // Regenrisiko
+  // }else if(rain != 0.00){
+  //   weatherString += "  Rain: " + String(rain, 1) + " mm"; // Regenrisiko
+  // }else{
+  //   weatherString += "  Clouds: " + String(clouds) + " %"; // Regenrisiko
+  // }
 //  weatherString += "  Wind: " + String(windSpeed, 1) + "m/s                "; // Windgeschwindigkeit
-  weatherString += "  Wind: " + String(windSpeed, 1) + " km/h" + "                "; // Windgeschwindigkeit
+  // weatherString += "  Wind: " + String(windSpeed, 1) + " km/h" + "                "; // Windgeschwindigkeit
   //weatherString += String(windDeg) + deg + "  ";
   //weatherString +=  arrowUp + "  " + windDirection.substring(2*wr,2*wr+2) + "                "; // Windgeschwindigkeit und Richtung
   Serial.println(weatherString);  //Leh

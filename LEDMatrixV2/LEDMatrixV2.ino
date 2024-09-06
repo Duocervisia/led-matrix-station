@@ -59,7 +59,7 @@ int windDeg;
 String date;
 
 String WTemp, Datum, Zeit;
-String weatherString;
+String weatherString, departures;
 
 #define NUM_MAX 4
 
@@ -88,6 +88,7 @@ int updCnt = 0;
 int dots = 0;
 long dotTime = 0;
 long clkTime = 0;
+long clkBvgTime = 0;
 int dx = 0;
 int dy = 0;
 byte del = 0;
@@ -132,18 +133,26 @@ void loop()
   distance=sr04.Distance();
 
   if (millis() - clkTime > 900000 || bStart){ //update weather every 15 min
-    bStart = false;
     Serial.println("Verbinde ...");
     getWeatherData();
     getTimeLocal();
     Serial.println("Daten geladen");
     clkTime = millis();
   }
+  if (millis() - clkBvgTime > 120000 || bStart){ //update bvg every 2 min
+    bStart = false;
+    Serial.println("Lade BVG...");
+    getBvgData();
+    Serial.println("Daten geladen");
+    clkBvgTime = millis();
+  }
+
   Serial.println(distance);
 
 
   if (distance < 100) { //distance smaler than given centimeters
-    printStringWithShift(weatherString.c_str(), 30);
+    String combinedString = weatherString + " " + departures+ "                ";
+    printStringWithShift(combinedString.c_str(), 30);
   }
 
 //  if (millis() - clkTime > 15000 && !del && dots) { // clock for 15s, then scrolls for about 30s
