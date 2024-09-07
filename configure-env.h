@@ -4,7 +4,7 @@
 /*************************************Wifi Setup**************************************/
 
 const char* ssid = "SSID"; // the name of the WiFi network
-const char* password = "Passowrd"; // the password of the WiFi network
+const char* password = "Password"; // the password of the WiFi network
 
 /*************************************Weather API Setup**************************************/
 
