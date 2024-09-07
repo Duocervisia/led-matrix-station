@@ -23,14 +23,15 @@ This project is an Arduino-based information station that uses an LED matrix to 
 
 ## Setup
 
+1. Connect the components according to the Schematic.png 
 
-1. Install Libraries: Ensure the following libraries are installed in your Arduino IDE:
+2. Install Libraries: Ensure the following libraries are installed in your Arduino IDE:
     - ArduinoJsonon
     - Timezone
     - TimeLib
     - HC-SR04 HC-SR04
     You can find the libraries in the libaries folder in this project.
 
-2. Configure env.h: Rename "configure-env.h" to "env.h". Update the ssid and password variables in the env.h file with your WiFi credentials. Change the weatherKey to your API key from openweathermap. Other variables can also be adjusted in this file.
+3. Configure env.h: Rename "configure-env.h" to "env.h". Update the ssid and password variables in the env.h file with your WiFi credentials. Change the weatherKey to your API key from openweathermap. Other variables can also be adjusted in this file.
 
-3. Upload Code: Upload the provided code to your ESP8266 board.
+4. Upload Code: Upload the provided code to your ESP8266 board.
