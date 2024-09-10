@@ -71,40 +71,40 @@ void setup()
 
   sendCmdAll(CMD_SHUTDOWN, 1);
   sendCmdAll(CMD_INTENSITY, 0);
-  Serial.print("Verbinde mit WiFi ");
+  Serial.print("Connecting to Wifi");
   WiFi.begin(ssid, password);
-  printStringWithShift("Verbinde", 15);
+  printStringWithShift("Loadin", 15);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
   Serial.println("");
-  Serial.print("Verbunden: "); Serial.println(WiFi.localIP());
+  Serial.print("Connected: "); Serial.println(WiFi.localIP());
 
   Udp.begin(localPort);
-  Serial.print("lokaler Port: ");
+  Serial.print("Local Port: ");
   Serial.println(Udp.localPort());
-  Serial.println("Warten auf die Synchronisation");
+  Serial.println("Waiting for sync");
   setSyncProvider(getNtpTime);
-  setSyncInterval(86400);                    // Anzahl der Sekunden zwischen dem erneuten Synchronisieren ein. 86400 = 1 Tag
+  setSyncInterval(86400); // synchronise every 24 hours
 }
-/*************************************(Hauptprogramm)**************************************/
+
 void loop()
 {
   distance=sr04.Distance();
 
   if (millis() - clkTime > 900000 || bStart){ //update weather every 15 min
-    Serial.println("Verbinde ...");
+    Serial.println("Connecting ...");
     getWeatherData();
     getTimeLocal();
-    Serial.println("Daten geladen");
+    Serial.println("Data loaded");
     clkTime = millis();
   }
   if (millis() - clkBvgTime > 120000 || bStart){ //update bvg every 2 min
     bStart = false;
-    Serial.println("Lade BVG...");
+    Serial.println("Loading BVG...");
     getBvgData();
-    Serial.println("Daten geladen");
+    Serial.println("Data loaded");
     clkBvgTime = millis();
   }
 

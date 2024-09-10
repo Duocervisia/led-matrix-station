@@ -21,7 +21,7 @@ void getBvgData() {
   }
 
   //set global departure variable to new String
-  departures = "S1: ";
+  departures = "";
   for (byte i = 0; i < sizeof(root["departures"]) - 1; i++) {
     //for each train, decide if it's the right direction and show time or canceled
     if(root[i].as<String>() != NULL){
@@ -29,18 +29,22 @@ void getBvgData() {
       if(platform == stationPlattform){
         String departure = root["departures"][i]["when"].as<String>();
         if(departure == NULL){
-          departures += root["departures"][i]["plannedWhen"].as<String>().substring(11,16) + " / ";
+          departure = root["departures"][i]["plannedWhen"].as<String>();
+          departures += departure.substring(11,16) + " / ";
         }else{
           departures += departure.substring(11,16) + " / ";
         }
-      }else if(platform == NULL){
-        departures += "canceled / ";
       }
     }
     Serial.println(departures);
   }
+  if(departures.length() > 0){
+    departures = departures.substring(0, (departures.length()-3));
+  }else{
+    departures = "No trains running";
+  }
   
-  departures = departures.substring(0, (departures.length()-3));
+  departures = String(stationName) + ": " + departures;
 }
 
 String httpGETRequest(const char* serverName) {
